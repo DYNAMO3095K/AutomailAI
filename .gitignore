@@ -14,12 +14,14 @@ npm-debug.log*
 # Word Documents
 *.doc
 *.docx
+*.pdf
 
 # Screenshots and Images
 *.png
 *.jpg
 *.jpeg
 
-Force Git to track these two specific files
+#Force Git to add the specified files
 !Screenshots/Home page.png
 !Screenshots/Quick start guide.png
+!Automail Read Me.docx
