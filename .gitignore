@@ -1,0 +1,25 @@
+# Dependency directories
+node_modules/
+
+# Environment variables
+.env
+
+# System files (macOS/Windows junk files)
+.DS_Store
+Thumbs.db
+
+# Debug logs
+npm-debug.log*
+
+# Word Documents
+*.doc
+*.docx
+
+# Screenshots and Images
+*.png
+*.jpg
+*.jpeg
+
+Force Git to track these two specific files
+!Screenshots/Home page.png
+!Screenshots/Quick start guide.png

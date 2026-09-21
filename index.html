@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automail | AI Email Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://accounts.google.com/gsi/client" onload="initTokenClient()" async defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #000; color: white; overflow-x: hidden; }
+        
+        .mesh-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #000 100%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .fade-in { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .shimmer-text {
+            background: linear-gradient(90deg, #fff, #6366f1, #fff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s linear infinite;
+        }
+        @keyframes shimmer { to { background-position: 200% center; } }
+    </style>
+</head>
+<body class="selection:bg-indigo-500/30">
+
+    <div class="mesh-bg"></div>
+
+    <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-black/20 backdrop-blur-md border-b border-white/5">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="location.reload()">
+            <div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-lg">A</div>
+            <span class="text-xl font-bold tracking-tighter uppercase">Automail</span>
+        </div>
+        <div id="user-pill" class="hidden fade-in">
+            <div class="flex items-center gap-3 glass-card px-4 py-2 rounded-full">
+                <img id="user-img" src="" class="w-6 h-6 rounded-full border border-white/20">
+                <span id="user-name" class="text-xs font-bold tracking-widest opacity-80 uppercase"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="min-h-screen flex items-center justify-center pt-20 px-6">
+        
+        <section id="view-auth" class="view w-full max-w-lg fade-in">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-extrabold tracking-tighter mb-4 shimmer-text">Rewrite your workflow.</h1>
+                <p class="text-slate-400 text-lg leading-relaxed">Connect your Google account to authorize AI-powered email delivery.</p>
+            </div>
+
+            <div class="glass-card rounded-[2.5rem] p-12 shadow-2xl relative text-center">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-600/20 blur-[80px]"></div>
+                
+                <div class="mb-10">
+                    <div class="inline-block px-3 py-1 bg-white/5 rounded-full border border-white/10 text-[10px] font-bold tracking-[0.3em] uppercase text-indigo-400 mb-4">OAuth 2.0 Security</div>
+                    <h2 class="text-2xl font-bold">Terminal Access</h2>
+                </div>
+
+                <button onclick="requestPermission()" class="w-full flex items-center justify-center gap-3 py-4 bg-white text-black font-bold rounded-2xl hover:bg-slate-200 transition-all shadow-xl">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" fill="#EA4335"/>
+                    </svg>
+                    Authorize Google Account
+                </button>
+            </div>
+        </section>
+
+        <section id="view-dashboard" class="view hidden w-full max-w-[1400px] h-[750px] grid lg:grid-cols-12 gap-8 fade-in">
+            <div class="lg:col-span-4 glass-card rounded-[2.5rem] p-8 flex flex-col shadow-2xl">
+                
+                <div class="mb-4">
+                    <label class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-2 block">To (Separate with commas)</label>
+                    <input id="recipient-email" type="text" placeholder="person1@example.com, person2@example.com" 
+                        class="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-indigo-500 transition-all text-white text-sm">
+                </div>
+                
+                <div class="mb-6">
+                    <label class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 block">BCC (Hidden Recipients)</label>
+                    <input id="bcc-email" type="text" placeholder="secret1@example.com, secret2@example.com" 
+                        class="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-indigo-500 transition-all text-white text-sm">
+                </div>
+
+                <div class="flex-grow flex flex-col mb-6">
+                    <label class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-3 block">Email Objective</label>
+                    <textarea id="prompt-input" 
+                        class="w-full flex-grow p-6 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-indigo-500 transition-all resize-none text-slate-200"
+                        placeholder="e.g. Follow up on the contract sent yesterday..."></textarea>
+                </div>
+                
+                <div class="mb-2">
+                    <label class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-3 block">Attach File (Optional)</label>
+                    <input id="file-upload" type="file" multiple
+                        class="w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-white/10 file:text-white hover:file:bg-white/20 transition-all cursor-pointer">
+                    
+                    <div id="file-list-container" class="mt-3 flex flex-col gap-2"></div>
+                </div>
+
+                <button onclick="generateEmail()" class="mt-6 w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow-lg">
+                    Generate Draft
+                </button>
+            </div>
+
+            <div class="lg:col-span-8 glass-card rounded-[2.5rem] flex flex-col shadow-2xl overflow-hidden">
+                <div class="px-10 py-6 border-b border-white/10 bg-white/5 flex justify-between items-center">
+                    <h3 class="text-sm font-bold tracking-widest text-slate-400 uppercase">AI Workspace</h3>
+                    <button id="send-btn" onclick="sendEmail()" class="hidden px-8 py-2.5 bg-white text-black font-bold rounded-xl hover:bg-slate-200 transition-all">
+                        Send with Gmail
+                    </button>
+                </div>
+                <div class="p-10 flex-grow overflow-y-auto relative">
+                    <div id="loading-state" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-20 flex items-center justify-center">
+                        <div class="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <div id="output-placeholder" class="h-full flex items-center justify-center text-slate-600 italic">Draft is currently empty...</div>
+                    <div id="email-result" class="hidden">
+                        <div id="draft-text" class="font-serif text-2xl text-slate-200 leading-relaxed outline-none" contenteditable="true"></div>
+                    </div>
+                </div>
+                <div id="refine-bar" class="p-8 border-t border-white/10 opacity-20 pointer-events-none transition-all">
+                    <div class="relative">
+                        <input id="refine-input" type="text" class="w-full pl-6 pr-14 py-5 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-indigo-500" placeholder="Ask AI to refine the draft...">
+                        <button onclick="refineEmail()" class="absolute right-3 top-3 p-3 bg-indigo-600 text-white rounded-xl">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div id="welcome-guide" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 fade-in">
+            <div class="glass-card rounded-[2.5rem] p-10 max-w-xl w-full shadow-2xl relative border border-indigo-500/30">
+                
+                <div class="mb-8 text-center">
+                    <div class="inline-block px-3 py-1 bg-indigo-500/10 rounded-full border border-indigo-500/20 text-[10px] font-bold tracking-[0.3em] uppercase text-indigo-400 mb-4">Quick Start Guide</div>
+                    <h2 class="text-3xl font-bold text-white mb-2">Welcome to Automail</h2>
+                    <p class="text-slate-400 text-sm">Your AI email assistant is ready. Here is how it works:</p>
+                </div>
+
+                <div class="space-y-3 mb-8">
+                    <div class="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                        <div>
+                            <h4 class="font-bold text-slate-200 text-sm mb-1">Who & What</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">Type your goal in the <b>Email Objective</b> box. Add emails in the <b>To</b> or <b>BCC</b> boxes (separate multiple people with commas).</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                        <div>
+                            <h4 class="font-bold text-slate-200 text-sm mb-1">Attach Files (Optional)</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">Click to add PDFs, images, or documents. You can select multiple files at once. Click the "✕" to remove them if you make a mistake.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                        <div>
+                            <h4 class="font-bold text-slate-200 text-sm mb-1">Generate & Refine</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">Click <b>Generate Draft</b>. If you want to change how it sounds, just ask the AI to fix it using the bottom refine bar!</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="closeGuide()" class="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-slate-200 transition-all shadow-xl">
+                    Got it, let's start!
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 glass-card px-8 py-4 rounded-2xl shadow-2xl hidden fade-in z-[100] border-indigo-500/50">
+        <span id="toast-message" class="text-sm font-bold text-indigo-400 tracking-widest uppercase"></span>
+    </div>
+
+    <script>
+        let client;
+        let accessToken = null;
+        let currentDraft = "";
+        let currentUserEmail = ""; 
+        let selectedFilesArray = [];
+
+        // Listen for file selections and add them to our custom array
+        document.getElementById('file-upload').addEventListener('change', function(e) {
+            const newFiles = Array.from(e.target.files);
+            selectedFilesArray = selectedFilesArray.concat(newFiles);
+            updateFileListUI();
+            
+            // Clear the actual input so you can select the same file again if you accidentally delete it
+            e.target.value = ""; 
+        });
+
+        // Redraw the UI to show the current files with a delete button
+        function updateFileListUI() {
+            const container = document.getElementById('file-list-container');
+            container.innerHTML = ""; // Clear current list
+            
+            selectedFilesArray.forEach((file, index) => {
+                const fileDiv = document.createElement('div');
+                fileDiv.className = "flex justify-between items-center bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-xs text-slate-300 fade-in";
+                fileDiv.innerHTML = `
+                    <span class="truncate pr-4 font-medium">${file.name} <span class="opacity-50 ml-2">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span></span>
+                    <button onclick="removeSelectedFile(${index})" class="text-red-400 hover:text-red-300 font-bold p-1 transition-colors">✕</button>
+                `;
+                container.appendChild(fileDiv);
+            });
+        }
+
+        // Delete a specific file from the array and update the UI
+        function removeSelectedFile(index) {
+            selectedFilesArray.splice(index, 1);
+            updateFileListUI();
+        }
+
+        // Closes the Welcome Guide
+        function closeGuide() {
+            document.getElementById('welcome-guide').classList.add('hidden');
+        }
+
+        function initTokenClient() {
+            client = google.accounts.oauth2.initTokenClient({
+                client_id: '470771134238-l1fm5u69vgl4i8hiddvrbcvrscn68vbg.apps.googleusercontent.com', 
+                scope: 'https://mail.google.com/ https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+                callback: (tokenResponse) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                        accessToken = tokenResponse.access_token;
+                        fetchUserInfo();
+                        document.getElementById('view-auth').classList.add('hidden');
+                        document.getElementById('view-dashboard').classList.remove('hidden');
+                        
+                        // Trigger the modal here
+                        document.getElementById('welcome-guide').classList.remove('hidden');
+                        
+                        showToast("Access Granted");
+                    }
+                },
+            });
+        }
+
+        function requestPermission() {
+            client.requestAccessToken();
+        }
+
+        async function fetchUserInfo() {
+            const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            const user = await res.json();
+            currentUserEmail = user.email; 
+            document.getElementById('user-name').innerText = user.name;
+            document.getElementById('user-img').src = user.picture;
+            document.getElementById('user-pill').classList.remove('hidden');
+        }
+
+        async function generateEmail() {
+            const prompt = document.getElementById('prompt-input').value;
+            const recipient = document.getElementById('recipient-email').value;
+            const bcc = document.getElementById('bcc-email').value;
+            
+            if (!prompt || (!recipient && !bcc)) {
+                return showToast("Need Objective & at least 1 Recipient!");
+            }
+
+            setLoading(true);
+            try {
+                const res = await fetch('http://localhost:3000/generate-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                const data = await res.json();
+                renderResult(data.draft);
+            } catch (e) {
+                showToast("Backend Connection Error");
+                setLoading(false);
+            }
+        }
+
+        async function refineEmail() {
+            const instr = document.getElementById('refine-input').value;
+            if (!instr) return;
+            setLoading(true);
+            try {
+                const res = await fetch('http://localhost:3000/generate-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: `Current: ${currentDraft}\nChange: ${instr}` })
+                });
+                const data = await res.json();
+                renderResult(data.draft);
+                document.getElementById('refine-input').value = "";
+            } catch (e) { showToast("Refine Error"); setLoading(false); }
+        }
+
+        async function sendEmail() {
+            const recipient = document.getElementById('recipient-email').value;
+            const bcc = document.getElementById('bcc-email').value;
+            const body = document.getElementById('draft-text').innerText;
+            const btn = document.getElementById('send-btn');
+
+            if (!accessToken || !currentUserEmail) return showToast("Not Authorized");
+            
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+            
+            let attachmentsData = [];
+
+            if (selectedFilesArray.length > 0) {
+                btn.innerText = "Encoding Files...";
+                
+                const filePromises = selectedFilesArray.map(async (file) => {
+                    if (file.size > 10 * 1024 * 1024) {
+                        throw new Error(`File ${file.name} is over 10MB!`);
+                    }
+                    const base64Data = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsDataURL(file);
+                    });
+                    return { name: file.name, data: base64Data };
+                });
+
+                try {
+                    attachmentsData = await Promise.all(filePromises);
+                } catch (err) {
+                    showToast(err.message);
+                    btn.innerText = "Send with Gmail";
+                    btn.disabled = false;
+                    return;
+                }
+            }
+
+            try {
+                btn.innerText = "Sending...";
+                const response = await fetch('http://localhost:3000/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        accessToken: accessToken,
+                        senderEmail: currentUserEmail, 
+                        to: recipient, 
+                        bcc: bcc, 
+                        body: body,
+                        subject: "Sent via Automail AI",
+                        attachments: attachmentsData
+                    })
+                });
+
+                if (response.ok) {
+                    showToast("Email Sent Successfully");
+                    selectedFilesArray = []; // Clear array
+                    updateFileListUI();      // Clear UI
+                } else {
+                    const err = await response.json();
+                    throw new Error(err.error || "Unknown Error");
+                }
+            } catch (e) {
+                showToast("Delivery Failed. Check Terminal.");
+                console.error("Send failed:", e);
+            } finally {
+                btn.innerText = "Send with Gmail";
+                btn.disabled = false;
+            }
+        }
+
+        function renderResult(text) {
+            currentDraft = text;
+            document.getElementById('output-placeholder').classList.add('hidden');
+            document.getElementById('email-result').classList.remove('hidden');
+            document.getElementById('send-btn').classList.remove('hidden');
+            document.getElementById('refine-bar').classList.remove('opacity-20', 'pointer-events-none');
+            document.getElementById('draft-text').innerText = text;
+            setLoading(false);
+        }
+
+        function setLoading(state) {
+            document.getElementById('loading-state').classList.toggle('hidden', !state);
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 4000);
+        }
+    </script>
+</body>
+</html>
